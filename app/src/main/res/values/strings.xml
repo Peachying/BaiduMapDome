@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">BaiduMapDome</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+
+    <!--nav title-->
+    <string name="nav_home_title">我的主页</string>
+    <string name="nav_locationselect_title">我的位置收藏</string>
+    <string name="nav_run_title">我的运动记录</string>
+    <string name="nav_person_title">我的个人信息</string>
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
