@@ -13,4 +13,16 @@
     <string name="nav_person_title">我的个人信息</string>
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!--menu-->
+    <string name="search">search</string>
+    <string name="switch_title">切换</string>
+
+    <!--homeFragment -->
+    <string name="location">定位</string>
+
+    <!--popupwindow-->
+    <string name="selectPoint">收藏位置</string>
+    <string name="start">设置起点</string>
+    <string name="end">设置终点</string>
 </resources>

@@ -10,6 +10,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -23,21 +24,20 @@ import com.skyfin.baidumapdome.fragment.RunFragment;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
+    LayoutInflater mLayoutInflater = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //初始化百度sdk
         SDKInitializer.initialize(getApplicationContext());
+
+        mLayoutInflater = getLayoutInflater();
+
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-
+        //代替掉默认的布局
+        InitFragment();
+        //
+        replaceToolbar(R.id.home_toolbar);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
@@ -54,37 +54,31 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
         return super.onOptionsItemSelected(item);
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
         int id = item.getItemId();
-
         Fragment fragment = null;
-        String title = "hello";
         if (id == R.id.nav_home) {
-        fragment = new HomeFragment();
+            fragment = new HomeFragment();
+            replaceToolbar(R.id.home_toolbar);
         } else if (id == R.id.nav_location) {
             fragment = new LocationSelectFragment();
+            replaceToolbar(R.id.location_toolbar);
         } else if (id == R.id.nav_run) {
             fragment = new RunFragment();
+            replaceToolbar(R.id.run_toolbar);
         } else if (id == R.id.nav_person) {
             fragment = new PersonFragment();
+            replaceToolbar(R.id.person_toolbar);
         }
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -95,13 +89,25 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
-    private void InitFragment(){
-        Fragment fragment =new HomeFragment();
-        if(fragment!=null){
+
+    private void InitFragment() {
+        Fragment fragment = new HomeFragment();
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             fragmentTransaction.replace(R.id.main_fragment, fragment);
             fragmentTransaction.commit();
-        }
+
+    }
+
+    private void replaceToolbar(int id) {
+
+        Toolbar toolbar = (Toolbar)findViewById(R.id.home_toolbar);
+        toolbar.setTitle("hello");
+        setSupportActionBar(toolbar);
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
     }
 }
