@@ -1,5 +1,8 @@
 package com.skyfin.baidumapdome.fragment;
 
+import android.content.Context;
+import android.location.LocationManager;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
@@ -35,6 +38,7 @@ import com.baidu.mapapi.map.MyLocationData;
 import com.baidu.mapapi.map.OverlayOptions;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.mapapi.overlayutil.PoiOverlay;
+import com.baidu.mapapi.overlayutil.WalkingRouteOverlay;
 import com.baidu.mapapi.search.core.PoiInfo;
 import com.baidu.mapapi.search.core.SearchResult;
 import com.baidu.mapapi.search.poi.OnGetPoiSearchResultListener;
@@ -42,6 +46,14 @@ import com.baidu.mapapi.search.poi.PoiDetailResult;
 import com.baidu.mapapi.search.poi.PoiNearbySearchOption;
 import com.baidu.mapapi.search.poi.PoiResult;
 import com.baidu.mapapi.search.poi.PoiSearch;
+import com.baidu.mapapi.search.route.DrivingRouteResult;
+import com.baidu.mapapi.search.route.OnGetRoutePlanResultListener;
+import com.baidu.mapapi.search.route.PlanNode;
+import com.baidu.mapapi.search.route.RoutePlanSearch;
+import com.baidu.mapapi.search.route.TransitRouteResult;
+import com.baidu.mapapi.search.route.WalkingRouteLine;
+import com.baidu.mapapi.search.route.WalkingRoutePlanOption;
+import com.baidu.mapapi.search.route.WalkingRouteResult;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -89,15 +101,15 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
     MenuItem searchviewItem;
     //定位的view
     ImageView locatedIvw = null;
+    //地图walk 寻路
+    ImageView walking = null;
     //资源初始化
     BitmapDescriptor bdA = BitmapDescriptorFactory
-            .fromResource(R.drawable.icon_marka);
+            .fromResource(R.drawable.icon_mark_pt);
     BitmapDescriptor bdend = BitmapDescriptorFactory
             .fromResource(R.drawable.icon_en);
     BitmapDescriptor bdstart = BitmapDescriptorFactory
             .fromResource(R.drawable.icon_st);
-    BitmapDescriptor bdpt = BitmapDescriptorFactory
-            .fromResource(R.drawable.sns_shoot_location_pressed);
     LatLng mCenterlLatLng = new LatLng(31.541756, 104.700008);
     //定位的client
     private LocationClient mLocationClient;
@@ -123,6 +135,8 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
     //PoiNearbySearchOption 搜索结果
     PoiResult mPoiResult = null;
 
+    //自己定义POI 搜索的结果
+    LatLng mSearchLocation = null;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -162,12 +176,9 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
             public void onItemClick(View view, String data) {
                 Gson gson = new Gson();
                 LocationBean pBean = gson.fromJson(data, LocationBean.class);
-                LatLng searchLocation = new LatLng(pBean.location.get(1), pBean.location.get(0));
-                MoveToCenter(searchLocation);
-                OverlayOptions overlayOptions = new MarkerOptions().position(searchLocation).icon(bdA);
-                mBaiduMap.clear();
-                mBaiduMap.addOverlay(overlayOptions);
-
+                mSearchLocation = new LatLng(pBean.location.get(1), pBean.location.get(0));
+                MoveToCenter(mSearchLocation);
+                ShowStartAndEndLatLng();
                 mSearch_layout.setVisibility(View.INVISIBLE);
                 mBaidumap_layout.setVisibility(View.VISIBLE);
                 searchviewItem.collapseActionView();
@@ -179,7 +190,8 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
             @Override
             public void onClick(View v) {
                 initLocation();
-                if (!mLocationState) {
+                if (!mLocationState&&GetWifiAndGpsState()) {
+
                     mLocationState = true;
                     mLocationClient.start();//定位SDK start之后会默认发起一次定位请求，开发者无须判断isstart并主动调用request
                     ((LocationApplication) getActivity().getApplication()).setStringBuffer(new LocationApplication.OnStringBuffer() {
@@ -203,6 +215,49 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
                 } else {
                     mLocationClient.stop();
                     mLocationState = false;
+                }
+            }
+        });
+        walking = (ImageView) view.findViewById(R.id.walk);
+        walking.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (startLatLng.latitude!=0&&startLatLng.longitude!=0&&endLatLng.longitude!=0&&endLatLng.latitude!=0){
+                    PlanNode startPlanNade = PlanNode.withLocation(startLatLng);
+                    PlanNode endPlanNade = PlanNode.withLocation(endLatLng);
+                    WalkingRoutePlanOption pWalkingRoutePlanOption = new WalkingRoutePlanOption();
+                    pWalkingRoutePlanOption.from(startPlanNade).to(endPlanNade);
+                    RoutePlanSearch pRoutePlanSearch = RoutePlanSearch.newInstance();
+                    pRoutePlanSearch.walkingSearch(pWalkingRoutePlanOption);
+                    pRoutePlanSearch.setOnGetRoutePlanResultListener(new OnGetRoutePlanResultListener() {
+                        @Override
+                        public void onGetWalkingRouteResult(WalkingRouteResult walkingRouteResult) {
+
+                            if (walkingRouteResult.error == WalkingRouteResult.ERRORNO.RESULT_NOT_FOUND){
+                                Snackbar.make(mHomeFragmentView,"没有找到步行的路线",Snackbar.LENGTH_SHORT).show();
+                            }else{
+                                cleanStartAndEndLatLng();
+                                ShowStartAndEndLatLng();
+                                WalkingRouteOverlay pWalkingRouteOverlay = new WalkingRouteOverlay(mBaiduMap);
+                                List<WalkingRouteLine> mWalkingRouteLines = walkingRouteResult.getRouteLines();
+                                for (WalkingRouteLine p : mWalkingRouteLines){
+                                    pWalkingRouteOverlay.setData(p);
+                                }
+                                pWalkingRouteOverlay.addToMap();
+                                pWalkingRouteOverlay.zoomToSpan();
+                            }
+                        }
+                        @Override
+                        public void onGetTransitRouteResult(TransitRouteResult transitRouteResult) {
+
+                        }
+                        @Override
+                        public void onGetDrivingRouteResult(DrivingRouteResult drivingRouteResult) {
+
+                        }
+                    });
+                }else{
+                    Snackbar.make(mHomeFragmentView,"没有起点或者终点",Snackbar.LENGTH_SHORT).show();
                 }
             }
         });
@@ -307,7 +362,6 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
                             mPoiResult = poiResult;
                             mSearchPoiInfos = poiResult.getAllPoi();
                             ShowStartAndEndLatLng();
-
                         }
                     }
                     @Override
@@ -349,6 +403,12 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
                 }
             });
         }
+        if (id == R.id.action_clean){
+            cleanStartAndEndLatLng();
+            mPoiResult = null;
+            mSearchLocation = null;
+            ShowStartAndEndLatLng();
+        }
         return super.onOptionsItemSelected(item);
     }
     /*
@@ -373,7 +433,7 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
         option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);//可选，默认高精度，设置定位模式，高精度，低功耗，仅设备
         option.setCoorType("bd09ll");//可选，默认gcj02，设置返回的定位结果坐标系，
         option.setScanSpan(0);//可选，默认0，即仅定位一次，设置发起定位请求的间隔需要大于等于1000ms才是有效的
-        option.setIsNeedAddress(true);//可选，设置是否需要地址信息，默认不需要
+        option.setIsNeedAddress(true);//可选，设置是否需  地址信息，默认不需要
         option.setOpenGps(true);//可选，默认false,设置是否使用gps
         option.setPriority(LocationClientOption.GpsOnly);
         option.setLocationNotify(true);//可选，默认false，设置是否当gps有效时按照1S1次频率输出GPS结果
@@ -435,7 +495,7 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
             super.onPoiClick(index);
             if (mSearchPoiInfos.size() > 0) {
                 PoiInfo mPoiInfo = mSearchPoiInfos.get(index);
-                final View view = mLayoutInflater.inflate(R.layout.pop_hint_layout, null);
+                final View view = mLayoutInflater.inflate(R.layout.pop_hint_layout, null );
                 TextView textViewtitle = (TextView) view.findViewById(R.id.title);
                 TextView textViewaddr = (TextView) view.findViewById(R.id.addr);
                 TextView textViewphone = (TextView) view.findViewById(R.id.phone);
@@ -475,6 +535,7 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
                 endLatLng = latLng;
                 break;
         }
+        MoveToCenter(latLng);
         ShowStartAndEndLatLng();
     }
 
@@ -502,5 +563,24 @@ public class HomeFragment extends Fragment implements BaiduMap.OnMapLongClickLis
             overlay.addToMap(); //添加PoiOverlay到地图中
             overlay.zoomToSpan();
         }
+        if (mSearchLocation!=null)
+        {
+            OverlayOptions overlayOptions = new MarkerOptions().position(mSearchLocation).icon(bdA);
+            mBaiduMap.addOverlay(overlayOptions);
+        }
+    }
+    private boolean GetWifiAndGpsState(){
+        WifiManager mWiFiManager = (WifiManager) getActivity().getSystemService(Context.WIFI_SERVICE);
+        if(mWiFiManager.getWifiState()!=WifiManager.WIFI_STATE_ENABLED ){
+            Snackbar.make(mHomeFragmentView,"请打开Wifi",Snackbar.LENGTH_SHORT).show();
+            return false;
+        }
+        LocationManager lm = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+        boolean GPS_status = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        if (!GPS_status){
+            Snackbar.make(mHomeFragmentView,"请打开GPS",Snackbar.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
     }
 }

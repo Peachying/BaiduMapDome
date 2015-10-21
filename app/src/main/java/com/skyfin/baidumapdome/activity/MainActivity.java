@@ -17,9 +17,6 @@ import android.view.MenuItem;
 import com.baidu.mapapi.SDKInitializer;
 import com.skyfin.baidumapdome.R;
 import com.skyfin.baidumapdome.fragment.HomeFragment;
-import com.skyfin.baidumapdome.fragment.LocationSelectFragment;
-import com.skyfin.baidumapdome.fragment.PersonFragment;
-import com.skyfin.baidumapdome.fragment.RunFragment;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -70,15 +67,6 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_home) {
             fragment = new HomeFragment();
             replaceToolbar(R.id.home_toolbar);
-        } else if (id == R.id.nav_location) {
-            fragment = new LocationSelectFragment();
-            replaceToolbar(R.id.location_toolbar);
-        } else if (id == R.id.nav_run) {
-            fragment = new RunFragment();
-            replaceToolbar(R.id.run_toolbar);
-        } else if (id == R.id.nav_person) {
-            fragment = new PersonFragment();
-            replaceToolbar(R.id.person_toolbar);
         }
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
