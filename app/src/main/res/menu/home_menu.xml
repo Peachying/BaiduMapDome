@@ -1,0 +1,23 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
+    <item
+        android:id="@+id/action_search"
+        android:icon="@mipmap/ic_search"
+        app:actionViewClass="android.support.v7.widget.SearchView"
+        app:showAsAction="ifRoom|collapseActionView"
+        android:inputType="textCapWords"
+        android:imeOptions="actionSearch"
+        android:title="@string/search" />
+        <item
+            android:id="@+id/action_switch"
+            android:icon="@mipmap/ic_switch"
+            android:showAsAction="always"
+            android:title="@string/switch_title"/>
+    <item
+        android:icon="@mipmap/ic_clean"
+        android:id="@+id/action_clean"
+        android:showAsAction="always"
+        android:title="清空所有数据"
+        ></item>
+</menu>

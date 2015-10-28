@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="120dp"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:background="@drawable/location_tips"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/select"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/selectPoint"
+        android:textColor="@android:color/black"
+        android:textSize="15sp"></Button>
+
+    <Button
+        android:id="@+id/start"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/start"
+        android:textColor="@android:color/black"
+        android:textSize="15sp"></Button>
+
+    <Button
+        android:id="@+id/end"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/end"
+        android:textColor="@android:color/black"
+        android:textSize="15sp"></Button>
+</LinearLayout>

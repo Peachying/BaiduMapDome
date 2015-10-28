@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/location_tips"
+        android:layout_width="200.0dip"
+        android:layout_height="40.0dip"
+        android:textColor="@android:color/white">
+    </TextView>
+
+</LinearLayout>
